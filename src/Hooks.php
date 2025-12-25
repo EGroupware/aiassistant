@@ -312,7 +312,7 @@ class Hooks
 	public static function getProviderUrlMapping()
 	{
 		return array(
-			'egroupware'=> 'https://ai.egroupware.org/v1',
+			'egroupware'=> 'https://ai-proxy.egroupware.org/v1',
 			'ionos'     => 'https://openai.inference.de-txl.ionos.com/v1',
 			'ollama'    => 'http://172.17.0.1:11434/v1',
 			'openai'    => 'https://api.openai.com/v1',
