@@ -294,7 +294,7 @@ class Hooks
 		// Auto-populate API URL based on selected model
 		if (!empty($data['ai_model'])) {
 			[$provider] = explode(':', $data['ai_model']);
-			$urlMapping = self::getModelUrlMapping();
+			$urlMapping = self::getProviderUrlMapping();
 			
 			if (isset($urlMapping[$provider]) && empty($data['ai_api_url'])) {
 				$data['ai_api_url'] = $urlMapping[$provider];
@@ -305,11 +305,11 @@ class Hooks
 	}
 
 	/**
-	 * Get URL mapping for different AI models
+	 * Get URL mapping for different AI providers
 	 *
 	 * @return array
 	 */
-	private static function getModelUrlMapping()
+	public static function getProviderUrlMapping()
 	{
 		return array(
 			'egroupware'=> 'https://ai.egroupware.org/v1',

@@ -202,23 +202,20 @@ class Bo
 	 */
 	private function get_ai_config()
 	{
-		$api_url = $this->so->get_config('ai_api_url', 'https://api.openai.com/v1');
-		$model = $this->so->get_config('ai_model', 'gpt-4o-mini');
+		$model = $this->so->get_config('ai_model', 'openai:gpt-4o-mini');
+		// splitt off provider prefix
+		[$provider, $model] = explode(':', $model, 2);
+		$api_url = $this->so->get_config('ai_api_url', Hooks::getProviderUrlMapping()[$provider]);
 		$api_key = $this->so->get_config('ai_api_key');
 		
 		// Clean up API key - remove any whitespace/newlines
 		$api_key = trim($api_key);
 		
-		// Clean up model name - remove provider prefix if present
-		if (strpos($model, ':') !== false) {
-			[$provider, $model] = explode(':', $model, 2);
-		}
-		
 		return [
 			'api_url' => $api_url,
 			'api_key' => $api_key,
-			'model' => $model,
-			'provider' => $provider ?? null,
+			'model'   => $model,
+			'provider' => $provider,
 		];
 	}
 	
