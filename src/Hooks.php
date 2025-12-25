@@ -10,7 +10,7 @@
 
 namespace EGroupware\AIAssistant;
 
-use EGroupware\Api\Framework;
+use EGroupware\Api;
 use EGroupware\Api\Egw;
 use EGroupware\Api\Acl;
 
@@ -69,19 +69,15 @@ class Hooks
 	/**
 	 * hooks to build AI Assistant's sidebox-menu plus the admin and Api\Preferences sections
 	 *
-	 * @param string/array $args hook args
+	 * @param string|array $args hook args
 	 */
 	static function all_hooks($args)
 	{
 		$appname = AI_ASSISTANT_APP;
 		$location = is_array($args) ? $args['location'] : $args;
-		//echo "<p>ai_assistant_hooks::all_hooks(".print_r($args,True).") appname='$appname', location='$location'</p>\n";
 
 		if ($location == 'sidebox_menu')
 		{
-			// Magic etemplate2 favorites menu (from nextmatch widget)
-			display_sidebox($appname, lang('Favorites'), Framework\Favorites::list_favorites('aiassistant'));
-
 			$file = array(
 				'New Chat' => Egw::link('/index.php',array(
 					'menuaction' => 'aiassistant.EGroupware\\AIAssistant\\Ui.index',
@@ -118,36 +114,12 @@ class Hooks
 			$file['Clear History'] = "javascript:if(confirm('".lang('Clear all chat history?')."')){egw.json('aiassistant.EGroupware\\\\AIAssistant\\\\Ui.ajax_api',{action:'clear_history'}).sendRequest();}";
 			
 			display_sidebox($appname, lang('AI Assistant'), $file);
-
-			if ($GLOBALS['egw_info']['user']['apps']['admin'])
-			{
-				$file = array(
-					'Site Configuration' => Egw::link('/index.php','menuaction=admin.admin_config.index&appname=' . $appname.'&ajax=true'),
-					'Global Categories'  => Egw::link('/index.php','menuaction=admin.admin_categories.index&appname=' . $appname.'&ajax=true'),
-				);
-				if ($location == 'admin')
-				{
-					display_section($appname,$file);
-				}
-				else
-				{
-					display_sidebox($appname,lang('Admin'),$file);
-				}
-			}
 		}
 
 		if ($GLOBALS['egw_info']['user']['apps']['admin'])
 		{
 			$file = Array(
 				'Site Configuration' => Egw::link('/index.php','menuaction=admin.admin_config.index&appname=' . $appname.'&ajax=true'),
-				'Custom fields' => Egw::link('/index.php','menuaction=admin.admin_customfields.index&appname='.$appname.'&use_private=1&ajax=true'),
-				'Global Categories'  => Egw::link('/index.php',array(
-					'menuaction' => 'admin.admin_categories.index',
-					'appname'	=> $appname,
-					'global_cats'=> True,
-					'ajax' => 'true',
-				)),
-				'Usage Statistics' => Egw::link('/index.php','menuaction=aiassistant.EGroupware\\AIAssistant\\Ui.stats&ajax=true'),
 			);
 			if ($location == 'admin')
 			{
@@ -245,7 +217,7 @@ class Hooks
 	/**
 	 * ACL rights and labels used by AI Assistant
 	 *
-	 * @param string|array string with location or array with parameters incl. "location", specially "owner" for selected acl owner
+	 * @param string|array $params string with location or array with parameters incl. "location", specially "owner" for selected acl owner
 	 */
 	public static function acl_rights($params)
 	{
@@ -287,6 +259,10 @@ class Hooks
 		return array(
 			'sel_options' => array(
 				'ai_model' => array(
+					'egroupware:openai/gpt-oss-120b' => 'EGroupware/IONOS OpenAI GPT 4 120B',
+					'egroupware:meta-llama/Llama-3.3-70B-Instruct' => 'EGroupware/IONOS Meta Llama 3.3 70B',
+					'egroupware:mistralai/Mistral-Small-24B-Instruct' => 'EGroupware/IONOS Mistral Small 24B',
+					'ollama:mistral-small3.1:24b-instruct-2503-q4_K_M' => 'Ollama Mistral 3.1 Small (24b-instruct-2503-q4_K_M)',
 					'openai:gpt-4o' => 'OpenAI GPT-4o',
 					'openai:gpt-4o-mini' => 'OpenAI GPT-4o Mini',
 					'openai:gpt-4-turbo' => 'OpenAI GPT-4 Turbo',
@@ -316,12 +292,12 @@ class Hooks
 	public static function config_validate($data)
 	{
 		// Auto-populate API URL based on selected model
-		if (!empty($data['newsettings']['ai_model'])) {
-			$model = $data['newsettings']['ai_model'];
+		if (!empty($data['ai_model'])) {
+			[$provider] = explode(':', $data['ai_model']);
 			$urlMapping = self::getModelUrlMapping();
 			
-			if (isset($urlMapping[$model])) {
-				$data['newsettings']['ai_api_url'] = $urlMapping[$model];
+			if (isset($urlMapping[$provider]) && empty($data['ai_api_url'])) {
+				$data['ai_api_url'] = $urlMapping[$provider];
 			}
 		}
 		
@@ -336,17 +312,13 @@ class Hooks
 	private static function getModelUrlMapping()
 	{
 		return array(
-			'openai:gpt-4o' => 'https://api.openai.com/v1',
-			'openai:gpt-4o-mini' => 'https://api.openai.com/v1',
-			'openai:gpt-4-turbo' => 'https://api.openai.com/v1',
-			'openai:gpt-3.5-turbo' => 'https://api.openai.com/v1',
-			'anthropic:claude-3-5-sonnet-20241022' => 'https://api.anthropic.com/v1',
-			'anthropic:claude-3-5-haiku-20241022' => 'https://api.anthropic.com/v1',
-			'anthropic:claude-3-opus-20240229' => 'https://api.anthropic.com/v1',
-			'google:gemini-1.5-pro' => 'https://generativelanguage.googleapis.com/v1',
-			'google:gemini-1.5-flash' => 'https://generativelanguage.googleapis.com/v1',
-			'azure:gpt-4o' => 'https://models.inference.ai.azure.com',
-			'azure:gpt-4o-mini' => 'https://models.inference.ai.azure.com',
+			'egroupware'=> 'https://ai.egroupware.org/v1',
+			'ionos'     => 'https://openai.inference.de-txl.ionos.com/v1',
+			'ollama'    => 'http://172.17.0.1:11434/v1',
+			'openai'    => 'https://api.openai.com/v1',
+			'anthropic' => 'https://api.anthropic.com/v1',
+			'google'    => 'https://generativelanguage.googleapis.com/v1',
+			'azure'     => 'https://models.inference.ai.azure.com',
 		);
 	}
 

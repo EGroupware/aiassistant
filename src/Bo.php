@@ -83,7 +83,7 @@ class Bo
 		
 		// Get AI configuration
 		$api_config = $this->get_ai_config();
-		if (empty($api_config['api_key'])) {
+		if (empty($api_config['api_key']) && $api_config['provider'] !== 'ollama') {
 			throw new \Exception('AI API not configured. Please contact your administrator.');
 		}
 		
@@ -211,13 +211,14 @@ class Bo
 		
 		// Clean up model name - remove provider prefix if present
 		if (strpos($model, ':') !== false) {
-			$model = explode(':', $model)[1];
+			[$provider, $model] = explode(':', $model, 2);
 		}
 		
 		return [
 			'api_url' => $api_url,
 			'api_key' => $api_key,
 			'model' => $model,
+			'provider' => $provider ?? null,
 		];
 	}
 	
@@ -1001,7 +1002,7 @@ class Bo
 		}
 		
 		try {
-			$mailer = new \EGroupware\Api\Mailer();
+			$mailer = new Api\Mailer();
 			
 			// Set subject
 			$mailer->addHeader('Subject', $args['subject']);

@@ -12,7 +12,7 @@ use EGroupware\AIAssistant\Bo;
 
 $setup_info['aiassistant']['name']      = 'aiassistant';
 $setup_info['aiassistant']['title']     = 'AI Assistant';
-$setup_info['aiassistant']['version']   = '1.0.3';
+$setup_info['aiassistant']['version']   = '1.0.004';
 $setup_info['aiassistant']['app_order'] = 60;
 $setup_info['aiassistant']['enable']    = 5;    // do NOT show in navbar
 $setup_info['aiassistant']['index']     = 'aiassistant.'.EGroupware\AIAssistant\Ui::class.'.index&ajax=true';

@@ -23,14 +23,14 @@
 						<et2-description value="AI API URL" label="%s:"></et2-description>
 						<et2-description value="API endpoint URL (automatically set based on selected model)"></et2-description>
 					</et2-vbox>
-					<et2-textbox id="newsettings[ai_api_url]" readonly="true"></et2-textbox>
+					<et2-textbox id="newsettings[ai_api_url]" placeholder="leave empty to use the default"></et2-textbox>
 				</row>
 				<row>
 					<et2-vbox>
 						<et2-description value="AI API Key" label="%s:"></et2-description>
 						<et2-description value="API key for authenticating with the selected AI service"></et2-description>
 					</et2-vbox>
-					<et2-password id="newsettings[ai_api_key]" placeholder="Enter your API key" required="true"></et2-password>
+					<et2-password id="newsettings[ai_api_key]" placeholder="Enter your API key" required="true" autocomplete="new-password"></et2-password>
 				</row>
 			</rows>
 		</grid>

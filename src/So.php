@@ -41,7 +41,7 @@ class So
 	{
 		$data = [
 			'account_id' => $account_id,
-			'session_id' => session_id(),
+			'session_id' => sha1(session_id()),
 			'message_type' => $type,
 			'message_content' => $content,
 			'tool_calls' => $tool_calls ? json_encode($tool_calls) : null,
@@ -57,7 +57,7 @@ class So
 	/**
 	 * Get chat history for a user
 	 */
-	public function get_user_history($account_id, $limit = 50)
+	public function get_user_history(int $account_id, int $limit = 50)
 	{
 		$history = [];
 		foreach($this->db->select(
@@ -109,8 +109,6 @@ class So
 	public function save_config($name, $value)
 	{
 		// Use standard EGroupware config system
-		$config = Api\Config::read(self::APP);
-		$config[$name] = $value;
 		Api\Config::save_value($name, $value, self::APP);
 		
 		return true;
@@ -159,7 +157,7 @@ class So
 	 * @param string $sort Sort direction
 	 * @return array
 	 */
-	public function search($criteria = array(), $start = 0, $limit = 25, $order = 'created', $sort = 'DESC')
+	public function search($criteria = array(), int $start = 0, int $limit = 25, $order = 'created', $sort = 'DESC')
 	{
 		$where = [];
 		$join = '';
@@ -185,15 +183,16 @@ class So
 		{
 			if (is_array($criteria['created']))
 			{
-				$where[] = 'created BETWEEN ' . (int)$criteria['created'][0] . ' AND ' . (int)$criteria['created'][1];
+				$where[] = 'created BETWEEN ' . $this->db->quote($criteria['created'][0], 'datetime') .
+					' AND ' . $this->db->quote($criteria['created'][1], 'datetime');
 			}
 			else
 			{
-				$where[] = 'created >= ' . (int)$criteria['created'];
+				$where[] = 'created >= ' . $this->db->quote($criteria['created'], 'datetime');
 			}
 		}
 
-		if (preg_match('/^[a-z_]+', $order) && in_array(strtolower($sort), ['ASC', 'DESC']))
+		if (preg_match('/^[a-z_]+$/', $order) && in_array(strtoupper($sort), ['ASC', 'DESC']))
 		{
 			$order_clause = "ORDER BY $order $sort";
 		}
@@ -341,7 +340,7 @@ class So
 	 * @param int $limit Number of users to return
 	 * @return array
 	 */
-	public function get_user_statistics($limit = 10)
+	public function get_user_statistics(int $limit = 10)
 	{
 		$sql = "SELECT account_id, COUNT(*) as count, SUM(tokens_used) as total_tokens 
 				FROM egw_ai_assistant_history 
@@ -349,10 +348,8 @@ class So
 				ORDER BY count DESC 
 				LIMIT $limit";
 		
-		$this->db->query($sql, __LINE__, __FILE__);
-		
 		$stats = [];
-		while (($row = $this->db->row(true)))
+		foreach($this->db->query($sql, __LINE__, __FILE__) as $row)
 		{
 			$stats[] = [
 				'account_id' => $row['account_id'],
@@ -426,6 +423,8 @@ class So
 	 */
 	public function get_token_usage(int $start_time, int $end_time)
 	{
+		$start_time = $this->db->quote($start_time, 'datetime');
+		$end_time = $this->db->quote($end_time, 'datetime');
 		return $this->db->select(
 			self::HISTORY_TABLE,
 			'SUM(tokens_used)',
