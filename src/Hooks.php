@@ -253,7 +253,7 @@ class Hooks
 	public static function config($data)
 	{
 		// Load current configuration values from standard EGroupware config
-		$config = \EGroupware\Api\Config::read('aiassistant');
+		$config = Api\Config::read('aiassistant');
 
 		// Return select options for dropdowns and current/default values
 		return array(
@@ -274,6 +274,7 @@ class Hooks
 					'google:gemini-1.5-flash' => 'Google Gemini 1.5 Flash',
 					'azure:gpt-4o' => 'Azure OpenAI GPT-4o',
 					'azure:gpt-4o-mini' => 'Azure OpenAI GPT-4o Mini',
+					'custom' => 'Custom',
 				)
 			),
 			'default_values' => array_merge([

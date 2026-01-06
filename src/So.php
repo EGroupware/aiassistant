@@ -100,6 +100,10 @@ class So
 	{
 		// Use standard EGroupware config system
 		$config = Api\Config::read(self::APP);
+		if ($name === 'ai_model' && isset($config[$name]) && $config[$name] === 'custom')
+		{
+			$config[$name] = $config['ai_custom_model'] ?? null;
+		}
 		return $config[$name] ?? $default;
 	}
 	
