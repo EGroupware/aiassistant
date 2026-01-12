@@ -200,7 +200,7 @@ class Bo
 	/**
 	 * Get AI configuration
 	 */
-	private function get_ai_config()
+	function get_ai_config()
 	{
 		$model = $this->so->get_config('ai_model', 'openai:gpt-4o-mini');
 		// splitt off provider prefix
