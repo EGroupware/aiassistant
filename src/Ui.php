@@ -331,7 +331,7 @@ class Ui
 	{
 		try {
 			$bo = new Bo();
-			$config = $bo->get_api_config();
+			$config = $bo->get_ai_config();
 			
 			$this->test_api_connection($config);
 			
