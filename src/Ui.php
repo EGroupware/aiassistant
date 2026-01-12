@@ -330,12 +330,8 @@ class Ui
 	private function test_api_ajax()
 	{
 		try {
-			$so = new So();
-			$config = [
-				'api_url' => $_REQUEST['ai_api_url'] ?: $so->get_config('ai_api_url'),
-				'api_key' => $_REQUEST['ai_api_key'] ?: $so->get_config('ai_api_key'),
-				'model' => $_REQUEST['ai_model'] ?: $so->get_config('ai_model')
-			];
+			$bo = new Bo();
+			$config = $bo->get_api_config();
 			
 			$this->test_api_connection($config);
 			
