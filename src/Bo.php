@@ -287,7 +287,56 @@ class Bo
 			   "YOUR RESPONSE: Call get_current_date + search_calendar_events, then immediately show:\n" .
 			   "'### Today's Schedule (August 19, 2025)\n[Complete calendar results here]'";
 	}
-	
+
+	/**
+	 * Test API connection
+	 *
+	 * @param ?array $config values for keys "api_url", "model" and optional "api_key"
+	 * @return bool
+	 */
+	public static function test_api_connection(?array $config=null)
+	{
+		if (!isset($config))
+		{
+			$config = (new self)->get_ai_config();
+		}
+		if (empty($config['api_url']) || empty($config['model']))
+		{
+			throw new Api\Exception('Missing configuration: API URL or Model!');
+		}
+		$headers = [
+			'Content-Type: application/json',
+		];
+		if (!empty($config['api_key']))
+		{
+			$headers[] = 'Authorization: Bearer ' . $config['api_key'];
+		}
+
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $config['api_url'] . '/models');
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+
+		$response = curl_exec($ch);
+		$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		curl_close($ch);
+
+		if ($http_code !== 200)
+		{
+			throw new \Exception('HTTP ' . $http_code . ': ' . $response);
+		}
+
+		$result = json_decode($response, true, JSON_THROW_ON_ERROR);
+
+		if (!array_filter($result['data'] ?? [], fn($model) => $model['id'] === $config['model']))
+		{
+			throw new \Exception("Invalid model $config[model], not supported by endpoint!");
+		}
+
+		return true;
+	}
+
 	/**
 	 * Call AI API
 	 */

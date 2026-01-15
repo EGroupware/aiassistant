@@ -243,51 +243,6 @@ class Ui
 	}
 
 	/**
-	 * Test API connection
-	 *
-	 * @param array $config
-	 * @return bool
-	 */
-	private function test_api_connection($config)
-	{
-		$data = [
-			'model' => $config['model'],
-			'messages' => [
-				['role' => 'user', 'content' => 'Hello, this is a test message.']
-			],
-			'max_tokens' => 50
-		];
-
-		$headers = [
-			'Content-Type: application/json',
-			'Authorization: Bearer ' . $config['api_key']
-		];
-
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $config['api_url'] . '/chat/completions');
-		curl_setopt($ch, CURLOPT_POST, true);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-
-		$response = curl_exec($ch);
-		$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		curl_close($ch);
-
-		if ($http_code !== 200) {
-			throw new \Exception('HTTP ' . $http_code . ': ' . $response);
-		}
-
-		$result = json_decode($response, true);
-		if (!$result || !isset($result['choices'][0]['message'])) {
-			throw new \Exception('Invalid API response format');
-		}
-
-		return true;
-	}
-
-	/**
 	 * Save configuration via AJAX
 	 */
 	private function save_config_ajax()
@@ -331,9 +286,7 @@ class Ui
 	{
 		try {
 			$bo = new Bo();
-			$config = $bo->get_ai_config();
-			
-			$this->test_api_connection($config);
+			$bo->test_api_connection();
 			
 			Api\Json\Response::get()->data([
 				'success' => true,
