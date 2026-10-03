@@ -407,12 +407,19 @@ class Ui
 		
 		$bo = new Bo();
 		
-		// Get all selected IDs if select_all is true
+		// Get all selected IDs if select_all is true, from the criteria the list last ran -
+		// without them an empty query would mean every conversation, and without the explicit
+		// limit search() would silently stop at its default 25
 		if ($select_all)
 		{
-			$query = Api\Cache::getSession('aiassistant', 'index');
-			$all_conversations = $bo->search($query ?? []);
-			$selected = array_column($all_conversations, 'history_id');
+			$criteria = Api\Cache::getSession('aiassistant', 'list');
+			if (!is_array($criteria))
+			{
+				$msg = lang('Could not determine the current selection, please try again.');
+				return false;
+			}
+			@set_time_limit(0);
+			$selected = array_column($bo->search($criteria, 0, 0), 'history_id');
 		}
 		
 		switch ($action)
@@ -464,6 +471,49 @@ class Ui
 	}
 
 	/**
+	 * Run the list's context-menu actions over ajax, so the list keeps its scroll position and
+	 * selection instead of being rebuilt
+	 *
+	 * This is also what makes Delete work at all: list() rebuilds $content from scratch on every
+	 * call and never looks at $content['nm']['action'], so the submit it replaces reached
+	 * action() never.
+	 *
+	 * @param string $exec_id eTemplate request this came from - the only thing saying the caller
+	 *	had one of our pages open, see Nextmatch::validateExecId()
+	 * @param string $action 'delete'
+	 * @param string[] $selected history_ids
+	 * @param bool $all_selected expanded by action() from the criteria the list last ran
+	 */
+	public function ajax_action($exec_id, $action, array $selected, $all_selected = false)
+	{
+		if (!Api\Etemplate\Widget\Nextmatch::validateExecId($exec_id))
+		{
+			return;
+		}
+		$success = $failed = 0;
+		$action_msg = $msg = '';
+		if ($this->action($action, $selected, $all_selected, $success, $failed, $action_msg, 'nm', $msg))
+		{
+			$msg = lang('%1 conversations %2', $success, lang($action_msg)).
+				($failed ? ' '.lang('%1 failed', $failed) : '');
+		}
+		elseif (empty($msg))
+		{
+			$msg = lang('%1 conversations %2, %3 failed because of insufficent rights !!!',
+				$success, lang($action_msg), $failed);
+		}
+		// Naming the app in the 2nd argument makes egw.refresh() update the list itself: the
+		// "message only, a push will carry the change" sentinel needs something to send that
+		// push, and aiassistant never calls Link::notify_update().  Only one id fits in the 3rd
+		// argument, so the single-row update is only on when exactly one row changed; for
+		// anything more it gets no id at all, which reloads the list.
+		$single = !$all_selected && count($selected) === 1;
+		Api\Json\Response::get()->call('egw.refresh', $msg, 'aiassistant',
+			$single ? $selected[0] : null, $single ? 'delete' : null, 'aiassistant', null, null,
+			$failed ? 'error' : 'success');
+	}
+
+	/**
 	 * Get actions for nextmatch widget
 	 *
 	 * @param array $query Current query
@@ -487,15 +537,18 @@ class Ui
 				'popup' => '850x600',
 				'group' => $group,
 			),
-			'separator' => array(
-				'group' => ++$group,
-				'caption' => '---'
-			),
+			// No 'separator' pseudo-action here: egw_action already draws a line between groups,
+			// and an entry with nothing to execute falls through to a full eTemplate submit if
+			// anyone clicks it
 			'delete' => array(
 				'caption' => 'Delete',
 				'confirm' => 'Delete selected conversations?',
-				'group' => $group,
+				'group' => ++$group,
 				'allowOnMultiple' => true,
+				'onExecute' => 'javaScript:app.aiassistant.ajax_action',
+				// the class is namespaced, so the "<app>.<app>_ui.ajax_action" convention the
+				// client falls back to would not find it
+				'data' => ['menuaction' => 'aiassistant.'.self::class.'.ajax_action'],
 			),
 			'export' => array(
 				'caption' => 'Export',

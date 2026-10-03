@@ -1199,6 +1199,13 @@ class Bo
 			$criteria['account_id'] = $account_id;
 		}
 		
+		// Remember what the list is showing, so Ui::action() can expand a "select all" - it is
+		// handed only the ids the client sent, and has no $query of its own to re-run
+		if (empty($query['csv_export']))
+		{
+			Api\Cache::setSession('aiassistant', 'list', $criteria);
+		}
+
 		// Set up ordering
 		$order = $query['order'] ?? 'created';
 		$sort = $query['sort'] ?? 'DESC';
