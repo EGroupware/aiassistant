@@ -1,27 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE overlay PUBLIC "-//EGroupware GmbH//eTemplate 2.0//EN" "https://www.egroupware.org/etemplate2.0.dtd">
 <overlay>
-	<template id="aiassistant.list" template="" lang="" group="0" version="1.0.0">
-		<grid width="100%">
-			<columns>
-				<column width="100%"/>
-			</columns>
-			<rows>
-				<row class="dialogHeadbar">
-					<et2-hbox span="all" width="100%">
-						<et2-image src="aiassistant/navbar" align="left"></et2-image>
-						<et2-vbox class="dialogHeader">
-							<et2-description value="AI Assistant - Conversation History" class="dialogHeader"></et2-description>
-							<et2-description value="View and manage your AI conversations" class="dialogSubHeader"></et2-description>
-						</et2-vbox>
-					</et2-hbox>
-				</row>
-				<row class="row">
-					<nextmatch id="nm" template="aiassistant.list.rows" header_left="aiassistant.list.header_left" header_right="aiassistant.list.header_right"/>
-				</row>
-			</rows>
-		</grid>
-	</template>
 	<template id="aiassistant.list.rows" template="" lang="" group="0" version="1.0.0">
 		<grid>
 			<columns>
@@ -65,5 +44,26 @@
 		<et2-hbox>
 			<et2-button id="preferences" label="Settings" onclick="app.aiassistant.open_preferences" image="edit"></et2-button>
 		</et2-hbox>
+	</template>
+	<template id="aiassistant.list" template="" lang="" group="0" version="1.0.0">
+		<grid width="100%">
+			<columns>
+				<column width="100%"/>
+			</columns>
+			<rows>
+				<row class="dialogHeadbar">
+					<et2-hbox span="all" width="100%">
+						<et2-image src="aiassistant/navbar" align="left"></et2-image>
+						<et2-vbox class="dialogHeader">
+							<et2-description value="AI Assistant - Conversation History" class="dialogHeader"></et2-description>
+							<et2-description value="View and manage your AI conversations" class="dialogSubHeader"></et2-description>
+						</et2-vbox>
+					</et2-hbox>
+				</row>
+				<row class="row">
+					<nextmatch id="nm" template="aiassistant.list.rows" header_left="aiassistant.list.header_left" header_right="aiassistant.list.header_right"/>
+				</row>
+			</rows>
+		</grid>
 	</template>
 </overlay>
